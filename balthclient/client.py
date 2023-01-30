@@ -3,31 +3,27 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 1.1
-# Add typing annotations
-# Add a parameter to the uploading function, in order to make it callable with the customer argue further
-# Add an args manager
+@version: 2.0
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Easy client to request on Balthapp
 """
 
+
 import requests
 from args import Args
 
 # Set the constants
-PDF_PATH = "pdf_source/test-text.pdf"
 API_URL = "http://127.0.0.1:5000"
 
 '''
-Pour mémoire : 
 200 : « Everything is OK ». Il s’agit du code qui est délivré lorsqu’une page web ou une ressource se comporte exactement comme prévu.
 201 : « Created ». Le serveur a répondu à la requête du navigateur et a donc créé une nouvelle ressource.
 202 : « Accepted ». Le serveur a accepté la requête de votre navigateur mais la traite encore. La demande peut finalement aboutir ou non à une réponse complète.
 '''
 
 
-def upload_pdf(pdf_path=PDF_PATH) -> tuple[dict[str, str], int]:
+def upload_pdf(pdf_path) -> tuple[dict[str, str], int]:
     """
     Retourne un tuple contenant : [0] réponse dict type json ; [1] le code erreur
     Liste des HTTP status code :
@@ -46,7 +42,7 @@ def upload_pdf(pdf_path=PDF_PATH) -> tuple[dict[str, str], int]:
     # Manage the problem file path
     except FileNotFoundError as err:
         message = str(err) + " Veuillez vérifier le chemin vers le fichier PDF."
-        return {"error": message}, 0
+        return {"error": str(message)}, 0
     # Manage the others problems as connexion error
     except requests.exceptions.RequestException as err:
         return {"error": str(err)}, 0
@@ -69,7 +65,7 @@ def get_text(pdf_id: str) -> tuple[bytes, int] | tuple[dict[str, str], int]:
 
 
 # --------------------------------------- MANAGE ARGS AND RUN ----------------------------------------
-def _run(client_arg):
+def _run(client_arg) -> tuple[dict[str, str], int] | tuple[bytes, int]:
     if client_arg.postfile_pdfpath:
         return upload_pdf(client_arg.postfile_pdfpath)
     if client_arg.getmetadata_uuid:
@@ -84,3 +80,6 @@ if __name__ == '__main__':
         print(_run(manage_args.parsed_args))
     except KeyboardInterrupt:
         print('\n\n[CRITICAL]\tClosing: cause of an unexpected interruption order by keyboard (err: KeyboardInterrupt)')
+
+
+

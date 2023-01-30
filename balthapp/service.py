@@ -2,26 +2,18 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 1.1
-# Add typing annotations
-# Add the args manager
+@version: 2.0
+# Put extraction function in balthworker/tasks.py
+# Add a service to update metadata and text link in the db
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Database access and computing services
 """
-
-import os
-
-import model
-import pdfminer.high_level
-from magic import Magic
-from pdfrw import PdfReader
-from sqlalchemy import create_engine, delete, update
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-
-# The path to the folder where are uploaded the PDFs
-PDF_FOLDER_PATH = "storage/temp"
+from sqlalchemy import create_engine, update, delete
+from magic import Magic
+import model
 
 # ----------------------------------- DB ---------------------------------------------
 # Connects to SQLAlchemy DB
@@ -52,6 +44,26 @@ def update_pdf_task_state_in_db(pdf_id: str, state: str) -> bool:
     try:
         session = Session()
         session.execute(update(model.PdfData).where(model.PdfData.id == pdf_id).values(task_state=state))
+        session.commit()
+        return True
+    except Exception:
+        return False
+
+
+def update_pdf_metadata_in_db(pdf_id: str, metadata: dict):
+    try:
+        session = Session()
+        session.execute(update(model.PdfData).where(model.PdfData.id == pdf_id).values(data=metadata))
+        session.commit()
+        return True
+    except Exception:
+        return False
+
+
+def update_pdf_link_in_db(pdf_id: str, pdf_link: str) -> bool:
+    try:
+        session = Session()
+        session.execute(update(model.PdfData).where(model.PdfData.id == pdf_id).values(link=pdf_link))
         session.commit()
         return True
     except Exception:
@@ -109,12 +121,3 @@ def check_id(file_path: str) -> bool:
         return True
     except FileNotFoundError:
         return False
-
-
-# --------------------------------------- EXTRACT ----------------------------------------
-def extract_data(pdf_name: str) -> dict[str, str]:
-    pdf_url = os.path.join(PDF_FOLDER_PATH, pdf_name)
-    pdf_text = pdfminer.high_level.extract_text(pdf_url)
-    reader = PdfReader(pdf_url)
-    metadata = reader.Info
-    return {'metadata': str(metadata), 'pdf_text': str(pdf_text)}

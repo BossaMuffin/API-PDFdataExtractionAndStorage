@@ -1,12 +1,8 @@
-#!/usr/bin/env python3
 # coding: utf-8
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 1.1
-# Add typing annotations
-# Add a parameter to the uploading function, in order to make it callable with the customer argue further
-# Add an args manager
+@version: 2.0
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Easy client to request on Balthapp
