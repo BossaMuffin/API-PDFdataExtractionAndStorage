@@ -2,7 +2,8 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 1.0
+@version: 1.1
+# Add typing annotations
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Database model.

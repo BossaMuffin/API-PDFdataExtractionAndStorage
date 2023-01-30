@@ -2,16 +2,17 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 1.0
+@version: 1.1
+# Add typing annotations
+# Add the args manager
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Database access and computing services
 """
+
 import os
-from typing import Dict
 
 import model
-# pip install pdfminer.six
 import pdfminer.high_level
 from magic import Magic
 from pdfrw import PdfReader
@@ -30,7 +31,7 @@ Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
 
-def insert_pdf_info_in_db(data: Dict):
+def insert_pdf_info_in_db(data: dict) -> bool:
     # Adding new PDF entry
     try:
         session = Session()
@@ -42,12 +43,12 @@ def insert_pdf_info_in_db(data: Dict):
         return False
 
 
-def get_pdf_info_in_db(pdf_id):
+def get_pdf_info_in_db(pdf_id: str):
     session = Session()
     return session.query(model.PdfData).get(pdf_id)
 
 
-def update_pdf_task_state_in_db(pdf_id, state):
+def update_pdf_task_state_in_db(pdf_id: str, state: str) -> bool:
     try:
         session = Session()
         session.execute(update(model.PdfData).where(model.PdfData.id == pdf_id).values(task_state=state))
@@ -57,7 +58,7 @@ def update_pdf_task_state_in_db(pdf_id, state):
         return False
 
 
-def delete_pdf_in_db(pdf_id):
+def delete_pdf_in_db(pdf_id: str) -> bool:
     try:
         session = Session()
         session.execute(delete(model.PdfData).where(model.PdfData.id == pdf_id))
@@ -68,13 +69,13 @@ def delete_pdf_in_db(pdf_id):
 
 
 # --------------------------------------- CHECKIN ----------------------------------------
-def file_provided(file):
+def file_provided(file) -> bool:
     if file.filename == '':
         return False
     return True
 
 
-def valid_file_mimetype(file, mimetype: str):
+def valid_file_mimetype(file, mimetype: str) -> bool:
     # remettre le curseur en début de fichier
     file.seek(0)
     with Magic() as m:
@@ -87,20 +88,20 @@ def valid_file_mimetype(file, mimetype: str):
     return True
 
 
-def valid_file_ext(file, ext):
+def valid_file_ext(file, ext: str) -> bool:
     # Verify that the file has the good extension
     if not file.filename.endswith(ext):
         return False
     return True
 
 
-def valid_file_size(file, max_size):
+def valid_file_size(file, max_size: int) -> bool:
     if file.content_length > max_size:
         return False
     return True
 
 
-def check_id(file_path):
+def check_id(file_path: str) -> bool:
     # Check if a file exists (in the temporary folder or in the txt folder)
     try:
         with open(file_path, 'rb'):
@@ -111,9 +112,9 @@ def check_id(file_path):
 
 
 # --------------------------------------- EXTRACT ----------------------------------------
-def extract_data(pdf_name):
+def extract_data(pdf_name: str) -> dict[str, str]:
     pdf_url = os.path.join(PDF_FOLDER_PATH, pdf_name)
     pdf_text = pdfminer.high_level.extract_text(pdf_url)
     reader = PdfReader(pdf_url)
     metadata = reader.Info
-    return {'metadata': metadata, 'pdf_text': pdf_text}
+    return {'metadata': str(metadata), 'pdf_text': str(pdf_text)}

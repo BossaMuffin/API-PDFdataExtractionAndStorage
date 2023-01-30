@@ -2,48 +2,48 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 1.0
+@version: 1.1
+# Add typing annotations
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - API endpoints and controller
 """
 
-# From the flask_app folder:
-# Activate the virtual environnement :
-# >> source venv/bin/activate
-# Run Flask server :
-# >> FLASK_APP=balthapp.py flask --debug run
-
-
 import os
 from uuid import uuid4
 
 import service
-from flask import Flask, request, send_file
+from flask import Flask, Response, request, send_file
 from markupsafe import escape
 from werkzeug.utils import secure_filename
 
 # Crate an instance of our Flask API
 flask_app = Flask(__name__)
-flask_app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+flask_app.config['JSONIFY_PRETTYPRINT_REGULAR']: bool = True
 
 # Fixe la taille maximale des PDF téléchargé à 10MO
-MAX_FILE_SIZE_MB = 10
-MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024
+MAX_FILE_SIZE_MB: int = 10
+MAX_FILE_SIZE: int = MAX_FILE_SIZE_MB * 1024 * 1024
 # The path to the folder where are uploaded the PDFs
-PDF_FOLDER_PATH = "storage/temp"
-TXT_FOLDER_PATH = "storage/files"
-PDF_EXT = '.pdf'
-TXT_EXT = '.txt'
+PDF_FOLDER_PATH: str = "storage/temp"
+TXT_FOLDER_PATH: str = "storage/files"
+PDF_EXT: str = '.pdf'
+TXT_EXT: str = '.txt'
+
+# TODO: add requests limits for unique ip
+# TODO: refactor correctly the code
+# TODO: add a config system
+# TODO: add a logger system
 
 
 @flask_app.route('/')
 def hello():
+    # TODO: print the readme and the API contract
     return "Welcome on the Balth Mehus PDF API :)"
 
 
 @flask_app.route('/documents', methods=['POST'])
-def upload_pdf():
+def upload_pdf() -> tuple[dict[str, str], int]:
     # -------------------- CHECKIN -------------------------
     # Verify the post payload
     try:
@@ -67,17 +67,18 @@ def upload_pdf():
     # -------------------- TREATMENT -------------------------
     # Create a unique ID to identify the pdf document
     pdf_id = str(uuid4())
-    pdf_path = os.path.join(PDF_FOLDER_PATH, pdf_id + PDF_EXT)
-    txt_path = os.path.join(TXT_FOLDER_PATH, pdf_id + TXT_EXT)
-    txt_link = str(os.path.join(request.url_root, txt_path))
+    pdf_path: str = os.path.join(PDF_FOLDER_PATH, pdf_id + PDF_EXT)
+    txt_path: str = os.path.join(TXT_FOLDER_PATH, pdf_id + TXT_EXT)
+    txt_link: str = os.path.join(request.url_root, txt_path)
+    # TODO: make the extraction task asynchronous
     try:
         # Temporary save the PDF file in our storage to extract its contents further
         pdf_file.save(pdf_path)
         # Extraction of the metadata and the text of the PDF file
-        extract = service.extract_data(pdf_id + PDF_EXT)
+        extract: dict = service.extract_data(pdf_id + PDF_EXT)
         # -------------------- STORING -------------------------
         # Prepare the data to be stored in the DB
-        data_to_store = {
+        data_to_store: dict = {
             'id': str(pdf_id),
             'name': str(secure_filename(pdf_file.filename)),
             'data': str(extract['metadata']),
@@ -100,12 +101,12 @@ def upload_pdf():
         # Remove the PDF entry from DB
         if service.get_pdf_info_in_db(pdf_id):
             service.delete_pdf_in_db(pdf_id)
-        return {"error": err}, 500
+        return {"error": str(err)}, 500
     return {"_id": pdf_id}, 200
 
 
 @flask_app.route('/documents/<pdf_id>', methods=['GET'])
-def get_info(pdf_id):
+def get_info(pdf_id: str) -> tuple[dict[str, str], int]:
     pdf_id = escape(pdf_id)
     # Get pdf info in DB with pdf_id
     pdf = service.get_pdf_info_in_db(pdf_id)
@@ -127,7 +128,7 @@ def get_info(pdf_id):
 
 
 @flask_app.route('/text/<pdf_id>')
-def get_text(pdf_id):
+def get_text(pdf_id: str) -> tuple[Response, int] | tuple[dict[str, str], int]:
     pdf_id = escape(pdf_id)
     txt_path = os.path.join(TXT_FOLDER_PATH, pdf_id + TXT_EXT)
     # If exists, we return the content of the text extracted from the pdf
