@@ -2,12 +2,8 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 2.0
-# add requests limits for unique ip
-# make the extraction function asynchronous
-# fix type error in the function "create entry in db"
-# create requirements.txt for each 'module'
-# update README.md in this sens
+@version: 2.0.1
+# Add functions' docstrings
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - API endpoints and controller
@@ -63,7 +59,13 @@ TXT_EXT = '.txt'
 #  to clean balthapp/storage/files and balthapp/storage/temp from oldest files
 
 @flask_app.errorhandler(RateLimitExceeded)
-def handle_rate_limit_exceeded():
+def handle_rate_limit_exceeded(e):
+    """
+    The limit of requests by a unique IP is exceeded: send a message to the client
+    Args:
+    Returns:
+        ({"error" : str}, status_code: int = 429)
+    """
     response = jsonify(error="Too many requests, please try again later (README for more details).")
     response.status_code = 429
     return response
@@ -71,13 +73,28 @@ def handle_rate_limit_exceeded():
 
 @flask_app.route('/')
 def hello():
+    """Home page : it presents the API
+    ---
+    responses:
+        200:
+        description: Returns the welcome string
+    """
     # TODO: print the readme and the API contract
-    return "Welcome on the Balth Mehus PDF API :)"
+    return "Welcome on the Balth Mehus PDF API :)", 200
 
 
 @flask_app.route('/documents', methods=['POST'])
 @limiter.limit("10/minute, 1/second", override_defaults=False)
 def upload_pdf() -> tuple[dict[str, str], int]:
+    """Post PDF files in order to get metadata and text
+    ---
+    parameters:
+      - name: pdf_file
+        type: string
+    responses:
+      201:
+        description: Returns an uuid (str) which identify the uploaded pdf file
+    """
     # -------------------- CHECKIN -------------------------
     # Verify the post payload
     try:
@@ -131,6 +148,15 @@ def upload_pdf() -> tuple[dict[str, str], int]:
 @flask_app.route('/documents/<pdf_id>', methods=['GET'])
 @limiter.limit("20/minute, 1/second", override_defaults=False)
 def get_info(pdf_id: str) -> tuple[dict[str, str], int]:
+    """Get metadata of a PDF file by providing its uuid
+    ---
+    parameters:
+      - name: pdf_id
+        type: string
+    responses:
+      200:
+        description: Returns metadata of the PDF file.
+    """
     pdf_id = escape(pdf_id)
     pdf_path = os.path.join(PDF_FOLDER_PATH, pdf_id + PDF_EXT)
     txt_path = os.path.join(TXT_FOLDER_PATH, pdf_id + TXT_EXT)
@@ -143,7 +169,6 @@ def get_info(pdf_id: str) -> tuple[dict[str, str], int]:
         async_task = celery_app.AsyncResult(pdf.task_id, app=celery_app)
         # Initialize data to return
         pdf_data = ''
-        pdf_text = ''
         pdf_state = ''
         pdf_link = ''
         # -------------------- WHAT TASK STATUS ? ------------------------
@@ -151,7 +176,6 @@ def get_info(pdf_id: str) -> tuple[dict[str, str], int]:
         if pdf.task_state == async_task.state:
             # Prepare to return the previous data from db to customer
             pdf_data = pdf.data
-            pdf_text = pdf.text
             pdf_state = pdf.task_state
             pdf_link = pdf.link
         # A new state is found
@@ -177,11 +201,14 @@ def get_info(pdf_id: str) -> tuple[dict[str, str], int]:
             # -------------------- CLEANING -------------------------
             # In case of failure, we prefer to clean our db of this unless PDF entry
             # The customer needs to retry later
-            elif async_task.state == "FAILURE":
+            elif async_task.state == "FAILURE" or async_task.state == "FAILED":
                 service.delete_pdf_in_db(pdf_id)
 
             # We need to remove the temporary stored pdf file
-            if (async_task.state == "FAILURE" or async_task.state == "SUCCESS") and service.check_id(pdf_path):
+            if (async_task.state == "FAILURE"
+                or async_task.state == "FAILED"
+                or async_task.state == "SUCCESS") \
+                    and service.check_id(pdf_path):
                 # Remove the PDF from storage when task is completed
                 os.remove(pdf_path)
 
@@ -202,6 +229,15 @@ def get_info(pdf_id: str) -> tuple[dict[str, str], int]:
 @flask_app.route('/text/<pdf_id>')
 @limiter.limit("20/minute, 1/second", override_defaults=False)
 def get_text(pdf_id: str) -> tuple[Response, int] | tuple[dict[str, str], int]:
+    """Get the text of a PDF file by providing its uuid
+        ---
+        parameters:
+          - name: pdf_id
+            type: string
+        responses:
+          200:
+            description: Returns the binary text of the PDF file.
+        """
     pdf_id = escape(pdf_id)
     txt_path = os.path.join(TXT_FOLDER_PATH, pdf_id + TXT_EXT)
     if service.check_id(txt_path):

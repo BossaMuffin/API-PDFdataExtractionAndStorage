@@ -2,8 +2,7 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 2.0
-# Add Updated_at field in infos_db/metadata
+@version: 2.0.1
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Database model.

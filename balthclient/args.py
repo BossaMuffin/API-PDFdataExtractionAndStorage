@@ -2,7 +2,8 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 2.0
+@version: 2.0.1
+# Add doctrings
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Easy client to request on Balthapp
@@ -29,6 +30,12 @@ class Args:
         self.parsed_args = self._parser.parse_args()
 
     def _add_args(self, group):
+        """ Create a mutually exclusive required CLI parameters for our client app.
+        Args:
+            group 
+        Returns:
+            3 available parameters : postfile_pdfpath, getmetadata_uuid, gettext_uuid.
+        """
         group.add_argument("-pf",
                            "--postfile",
                            dest="postfile_pdfpath",

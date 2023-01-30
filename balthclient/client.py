@@ -3,7 +3,9 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 2.0
+@version: 2.0.1
+# remove unless docstrings
+# add usefull docstrings
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Easy client to request on Balthapp
@@ -16,39 +18,38 @@ from args import Args
 # Set the constants
 API_URL = "http://127.0.0.1:5000"
 
-'''
-200 : « Everything is OK ». Il s’agit du code qui est délivré lorsqu’une page web ou une ressource se comporte exactement comme prévu.
-201 : « Created ». Le serveur a répondu à la requête du navigateur et a donc créé une nouvelle ressource.
-202 : « Accepted ». Le serveur a accepté la requête de votre navigateur mais la traite encore. La demande peut finalement aboutir ou non à une réponse complète.
-'''
 
 
-def upload_pdf(pdf_path) -> tuple[dict[str, str], int]:
-    """
-    Retourne un tuple contenant : [0] réponse dict type json ; [1] le code erreur
-    Liste des HTTP status code :
-    > 200, 201, 202 : la requête a réussi.
-      >> la clé "_id" donne l'id unique créé lors de l'upload du document PDF.
-    > 400, 413, 415, 422 : la requête a été correctement envoyée à l'API, mais elle n'a pas abouti ;
-      >> la clé "error" donne une explication sur l'erreur qui a été managée.
-     > 0 : la requête à l'API n'a pas pu être envoyée, mais elle n'a pas abouti, car il y a un problème côté client ;
-      >> La clé "error" donne une explication sur l'erreur qui a été managée
+def upload_pdf(pdf_path: str) -> tuple[dict[str, str], int]:
+    """ Send a PDF file to the balthapp API by a POST request.
+    Args:
+        pdf_path (string): The PDF file path
+    Returns:
+        ({"_id" : str} | {"error": str}, status_code: int)
     """
     try:
         with open(pdf_path, 'rb') as pdf_file:
             response = requests.post(f'{API_URL}/documents', files={'pdf_file': pdf_file})
         # Give the answer from the API
         return response.json(), response.status_code
+    
     # Manage the problem file path
     except FileNotFoundError as err:
         message = str(err) + " Veuillez vérifier le chemin vers le fichier PDF."
         return {"error": str(message)}, 0
+    
     # Manage the others problems as connexion error
     except requests.exceptions.RequestException as err:
         return {"error": str(err)}, 0
 
 
 def get_info(pdf_id: str) -> tuple[dict[str, str], int]:
+    """ Get the metadata of the PDF file.
+    Args:
+        pdf_id (string): The PDF uuid received previously from baltapp
+    Returns:
+        ({metadata} | {"error": str}, status_code: int)
+    """
     try:
         response = requests.get(f'{API_URL}/documents/{pdf_id}')
         return response.json(), response.status_code
@@ -57,6 +58,12 @@ def get_info(pdf_id: str) -> tuple[dict[str, str], int]:
 
 
 def get_text(pdf_id: str) -> tuple[bytes, int] | tuple[dict[str, str], int]:
+    """ Get the text of the PDF file.
+    Args:
+        pdf_id (string): The PDF uuid received previously from baltapp
+    Returns:
+        (b.text | {"error": str}, status_code: int)
+    """
     try:
         response = requests.get(f'{API_URL}/text/{pdf_id}')
         return response.content, response.status_code
@@ -66,6 +73,12 @@ def get_text(pdf_id: str) -> tuple[bytes, int] | tuple[dict[str, str], int]:
 
 # --------------------------------------- MANAGE ARGS AND RUN ----------------------------------------
 def _run(client_arg) -> tuple[dict[str, str], int] | tuple[bytes, int]:
+    """ Run the client thanks to argues pass in CLI.
+    Args:
+        client_arg (argparse object): The argues passed by the user
+    Returns:
+        Balthapp Flask API response : (b.text | data: dict, status_code: int)
+    """
     if client_arg.postfile_pdfpath:
         return upload_pdf(client_arg.postfile_pdfpath)
     if client_arg.getmetadata_uuid:

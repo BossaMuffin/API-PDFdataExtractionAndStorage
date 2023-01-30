@@ -2,9 +2,8 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 2.0
-# Bind a Celery queue to a redis Server
-# Expose the extraction function as an asynchronous task
+@version: 2.0.1
+# Add doctsrings
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Celery asynchronous tasks
@@ -29,12 +28,21 @@ celery_app = Celery('tasks',
 
 @celery_app.task()
 def extract_data(pdf_name: str) -> dict[str, str]:
+    """ Extract the text and metadata from a PDF file.
+    Args:
+        pdf_name (string): the PDF uuid + extension (.pdf)
+    Returns:
+        {'data': pdf metadata (str), 'text': the text (str)}
+    """
     logger.info('Go Request - Work is starting ')
     pdf_url = os.path.join(PDF_FOLDER_PATH, pdf_name)
+
     # Extract the text from a PDF
     text = pdfminer.high_level.extract_text(pdf_url)
+
     # Extract metadata from a PDF
     reader = PdfReader(pdf_url)
     metadata = reader.Info
     logger.info('Work is finished')
+    
     return {'data': str(metadata), 'text': str(text)}
