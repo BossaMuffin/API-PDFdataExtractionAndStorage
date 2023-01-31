@@ -28,32 +28,7 @@ NB : le client Balthclient n'est pas exlusif (pas de système de token, de mot d
 
 
 ## Project structure
-  	
-    ├── balthclient             	# CLI client
-    │   ├── pdf_source
-    │	│		└── test_text.pdf  		# a PDF file provided to test the CLI quickly
-    │   ├── client.py 					# the main file
-    │   └── args.py
-    │
-    ├── balthapp  					# Flask API and storage
-    │   ├──	 static
-	│	│		└── api-contract.yaml	# openapi contract
-	│	├──	 storage	
-    │	│		├── temp   				# temporary folder to store pdf files during extraction
-    │	│		├── files				# folder to store text files after pdf file extraction
-    │   │		└── db    				# represents our db storage
-    │   │			└── pdf_infos.db
-    │	├── service.py 					# manage our db and compute some functions
-    │   └── model.py 			
-    │
-    ├── balthworker.py 				# Asynchronous service bind to Redis
-    │   		└── tasks.python 		# tasks to send to the celery queue 
-    │   
-    ├── architecture.jpg
-	├── requirements.txt
-    ├── README.md
-	└── LICENSE.md
-
+![](structure.png)
 ## Architecture
 ![](architecture.jpg)
 ## Prérequis
@@ -84,9 +59,9 @@ NB :
 
 
 ## Installation (pour un mode local)
-1) Téléchargez ou clonez le dépôt sur votre ordinateur :
+1. Téléchargez ou clonez le dépôt sur votre ordinateur :
 	https://github.com/BossaMuffin/API-PDFdataExtractionAndStorage.git
-3) Installez et configurez le serveur Redis: 
+3. Installez et configurez le serveur Redis: 
 	* Dans un conteneur Docker : `docker run - d - p 6379:6379 redis`
 	* Ou sur votre machine (Unix) : 
 		```bash
@@ -96,12 +71,12 @@ NB :
 		$ sudo apt-get update
 		$ sudo apt-get install redis
 		```
-4) Lancer le serveur Redis :
+4. Lancer le serveur Redis :
 	```bash
 	$ sudo redis-server
 	```
-5) Ouvrir trois terminaux dans le dossier `API-PDFdataExtractionAndStorage` :
-6) Créer un venv et l'activer pour exécuter le programme sans affecter le reste de votre environnement.
+5. Ouvrir trois terminaux dans le dossier `API-PDFdataExtractionAndStorage` :
+6. Créer un venv et l'activer pour exécuter le programme sans affecter le reste de votre environnement.
 	`$ cd API-PDFdataExtractionAndStorage`
 	* Sous Windows : 
 		```bash
@@ -111,21 +86,21 @@ NB :
 		```bash
 		$ source .venv/bin/activate
 		``` 
-7) Installez les bibliothèques nécessaires, depuis le dossier `API-PDFdataExtractionAndStorage` :
+7. Installez les bibliothèques nécessaires, depuis le dossier `API-PDFdataExtractionAndStorage` :
 	```bash
 	$ pip install -r requirements.txt
 	```
-8) Dans le premier terminal, allez dans le dossier 'balthapp' : lancer l'application Flask (installé avec requirements.txt) ;  
+8. Dans le premier terminal, allez dans le dossier 'balthapp' : lancer l'application Flask (installé avec requirements.txt) ;  
 	``` bash
 	$ cd API-PDFdataExtractionAndStorage/balthapp
 	$ FLASK_APP=balthapp.py flask --debug run
 	```
-9) Dans le deuxième terminal, allez dans le dossier 'balthworker', lancer la file d'attente Celery (Task Queue) :
+9. Dans le deuxième terminal, allez dans le dossier 'balthworker', lancer la file d'attente Celery (Task Queue) :
 	```bash
 	$ cd API-PDFdataExtractionAndStorage/balthworker
 	$ celery -A tasks worker --loglevel=INFO
 	```
-10) Le troisème terminal servira à l'exécution du client depuis 'balthclient'.
+10. Le troisème terminal servira à l'exécution du client depuis 'balthclient'.
 	`$ cd API-PDFdataExtractionAndStorage/balthclient`
 
 ## Utilisation
@@ -163,8 +138,8 @@ Par défault, la taille maximale des fichiers PDF tolérés à l'upload est fix�
 
 
 ## Exemples d'utilisation
-0) A l'aide d'un nouveau terminal, activez l'environnement virtuel de 'API-PDFdataExtractionAndStorage' et placez-vous dans le dossier `balthclient`.
-1) Uploader un fichier pdf en vue de récupérer ses métadonnées et son texte :
+0. A l'aide d'un nouveau terminal, activez l'environnement virtuel de 'API-PDFdataExtractionAndStorage' et placez-vous dans le dossier `balthclient`.
+1. Uploader un fichier pdf en vue de récupérer ses métadonnées et son texte :
 	* Commande :
 		```bash
 		$ python client.py -pf le/chemin/vers/mon/fichier.pdf
@@ -175,7 +150,7 @@ Par défault, la taille maximale des fichiers PDF tolérés à l'upload est fix�
 			'_id': '76310ab9-01d9-49c3-927c-1bafaa0a52a8'
 		}, 201)
 		```
-2) Récupérer les métadonnées du fichier pdf :
+2. Récupérer les métadonnées du fichier pdf :
 	* Commande : 
 		```bash
 		$ python client.py -gm 76310ab9-01d9-49c3-927c-1bafaa0a52a8
@@ -195,7 +170,7 @@ Par défault, la taille maximale des fichiers PDF tolérés à l'upload est fix�
 		'link': 'http://127.0.0.1:5000/storage/files/6553e8d7-a286-40b9-b7d3-a1558928b22c.txt', 'name': 'test-text.pdf', 'task_state': 'SUCCESS', 'updated_at': 'None'
 		}, 200)
 		```
-3) Récupérer le texte du fichier pdf :
+3. Récupérer le texte du fichier pdf :
 	* Commande : 
 		```bash
 		$ python client.py -gt 76310ab9-01d9-49c3-927c-1bafaa0a52a8
@@ -219,16 +194,16 @@ Liste des HTTP status code :
 * 0 : la requête à l'API n'a pas pu être envoyée, mais elle n'a pas abouti, car il y a un problème côté client ;
 NB: La clé "error" donne une explication sur l'erreur qui a été managée
 ##### Rappel :
-200 : « Everything is OK ». Il s’agit du code qui est délivré lorsqu’une page web ou une ressource se comporte exactement comme prévu.
-201 : « Created ». Le serveur a répondu à la requête du navigateur et a donc créé une nouvelle ressource.
-202 : « Accepted ». Le serveur a accepté la requête de votre navigateur mais la traite encore. La demande peut finalement aboutir ou non à une réponse complète.
+- 200 : « Everything is OK ». Il s’agit du code qui est délivré lorsqu’une page web ou une ressource se comporte exactement comme prévu.
+- 201 : « Created ». Le serveur a répondu à la requête du navigateur et a donc créé une nouvelle ressource.
+- 202 : « Accepted ». Le serveur a accepté la requête de votre navigateur mais la traite encore. La demande peut finalement aboutir ou non à une réponse complète.
 
 
 ## Arrêt du programme
-1) Pour chacun des terminaux ouverts précédemment à la section 'Installation' (Redis, Celery et Flask) :
+1. Pour chacun des terminaux ouverts précédemment à la section 'Installation' (Redis, Celery et Flask) :
 	`CTRL + C`.
-2) Vérifier le contenu des dossiers `balthapp/storage/temp`, `balthapp/storage/db` et `balthapp/storage/files`. Au besoin, les nettoyer (suppression de la base de donnée, des fichiers textes sauvegardé et des pdf uploadés conservés par erreur).
-3) Décerner la note maximale à l'élève.
+2. Vérifier le contenu des dossiers `balthapp/storage/temp`, `balthapp/storage/db` et `balthapp/storage/files`. Au besoin, les nettoyer (suppression de la base de donnée, des fichiers textes sauvegardé et des pdf uploadés conservés par erreur).
+3. Décerner la note maximale à l'élève.
 
 
 ## Licence
