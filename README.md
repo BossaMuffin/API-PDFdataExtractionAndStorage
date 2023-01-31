@@ -22,7 +22,7 @@ Les tâches d'extraction sont réalisées de manière asynchrone dans `balthwork
 * Magic est utilisé pour vérifier le type MIME des fichiers téléchargés.
 * La taille des fichiers uploadés est limité à 10Mo
 * La bonne couverture des tests unitaires est vérifiée à l'aide de Pytest-cov. 
-* Le [contrat d'API](http://localhost:5000/apidocs) est accessible avec Swagger.
+* Le [contrat d'API](http://localhost:5000/contract) est au standard openapi et il disponible au format yaml.
 
 NB : le client Balthclient n'est pas exlusif (pas de système de token, de mot de passe, d'ip filtrée...). N'importe quelles requêtes pourraient obtenir une réponse de Balthapp.
 
