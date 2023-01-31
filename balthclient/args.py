@@ -1,9 +1,10 @@
+#!/usr/bin/env python3
 # coding: utf-8
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 2.0.1
-# Add doctrings
+@version: 2.1
+# Add details in help string
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Easy client to request on Balthapp
@@ -25,28 +26,32 @@ class Args:
             -> See the README file and Have fun ;)
             """
         )
-        self._group = self._parser.add_mutually_exclusive_group(required=True)
+        self._group = self._parser.add_mutually_exclusive_group()
         self._add_args(self._group)
+        self._parser.add_argument("-dc",
+                                  "--downloadcontract",
+                                  dest="downloadAPIcontract",
+                                  nargs='?',
+                                  help="Download the API contract (.yaml)")
         self.parsed_args = self._parser.parse_args()
 
     def _add_args(self, group):
-        """ Create a mutually exclusive required CLI parameters for our client app.
-        Args:
-            group 
-        Returns:
-            3 available parameters : postfile_pdfpath, getmetadata_uuid, gettext_uuid.
+        """ Create a mutually exclusive required CLI parameters for our client app
+        :param group:
+        :return: one of the 3 available parameters : postfile_pdfpath, getmetadata_uuid, gettext_uuid
         """
         group.add_argument("-pf",
                            "--postfile",
                            dest="postfile_pdfpath",
                            type=str,
-                           help="By providing only one local path, post a PDF file to the API. Returning the job ID.")
+                           help="Firstly, by providing only one local path, "
+                                "post a PDF file to the API. Returning the job ID.")
 
         group.add_argument("-gm",
                            "--getmetadata",
                            dest="getmetadata_uuid",
                            type=str,
-                           help="By providing the received job ID "
+                           help="Then, after --postfile only, by providing the received job ID "
                                 "(UUID, ex:76310ab9-01d9-49c3-927c-1bafaa0a52a8), "
                                 "get a the extracted metadata from the corresponding posted PDF.")
 
@@ -54,6 +59,7 @@ class Args:
                            "--gettext",
                            dest="gettext_uuid",
                            type=str,
-                           help="By providing the received job ID, "
+                           help="Finaly, after --getmetada only, by providing the received job ID, "
                                 "(UUID, ex:76310ab9-01d9-49c3-927c-1bafaa0a52a8), "
                                 "get a the extracted text from the corresponding posted PDF.")
+

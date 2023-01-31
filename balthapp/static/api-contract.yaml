@@ -1,0 +1,145 @@
+openapi: 3.0.2
+info:
+  title: Balthapp
+  version: 2.2
+  description: An API to upload a PDF file and get its extracted metadata and text.
+  author: Balthazar Méhus
+  society: Bossa Muffin - CentraleSupélec
+  contact:
+    email: engineer@bossamuffin.com
+  license:
+    name: license
+    url: /LICENSE.md
+  security: []
+  servers:
+    url: /
+  paths:
+    /:
+      get:
+        description: Home page presents the API.
+        responses:
+          200:
+            description: Returns the welcome string.
+  /documents:
+    post:
+      summary: Upload a PDF file for processing.
+      description: Post PDF files in order to get metadata and text.
+      requestBody:
+        name: pdf_file
+        description: The PDF file to upload
+        required: true
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      responses:
+        201:
+          summary: PDF uploaded successfully.
+          description: Returns an uuid (str) which identifies the uploaded pdf file.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    description: Unique identifier of the uploaded PDF file.
+              examples:
+                value: >-
+                  {
+                    "_id": "35291388-83c8-4ec2-95b7-7c5c62713961",
+                  }
+        400:
+          description: Bad Request. No PDF file provided
+        415:
+          description: Unsupported Media Type. Invalid file type
+        413:
+          description: Payload too Large. File size exceeded the maximum limit
+        422:
+          description: Unprocessable Entity. Invalid payload
+        500:
+          description: Internal Server Error. Error occurred during processing
+    /metadata/{pdf_id}:
+      get:
+        summary: Get metadata.
+        description: Get metadata from the pdf file thanks its unique ID métadonnées d'un fichier PDF en utilisant son ID
+        parameters:
+          - name: pdf_id
+            in: path
+            description: The provided unique ID of the document to retrieve metadata from
+            required: true
+            type: string
+        responses:
+          200:
+            description: Returns metadata about the document
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                  items:
+                    $ref: "#/component/schemas/PdfMetadata"
+                examples:
+                  value: >-
+                    {
+                      "_id": "35291388-83c8-4ec2-95b7-7c5c62713961",
+                      "name": "test-text.pdf",
+                      "link": "'http://127.0.0.1:5000/storage/files/35291388-83c8-4ec2-95b7-7c5c62713961.txt",
+                      "data": "{\'/Title\': \'(Microsoft Word - Software_design_guide.docx)\', \'/Producer\': \'(macOS Version 11.5.1 \\\\(Build 20G80\\\\) Quartz PDFContext)\', \'/Creator\': \'(Word)\', \'/CreationDate\': "(D:20210813100532Z00\'00\')", \'/ModDate\': "(D:20210813100532Z00\'00\')"}",
+                      "task_state": "SUCCESS",
+                      "created_at": "2023-01-31 13:46:45",
+                    }
+          404:
+            description: The document with the provided id was not found
+          500:
+            description: Internal server error
+    /text/{pdf_id}:
+      get:
+        summary: Download the text.
+        description: Get the extracted text content of the document with the provided unique ID.
+        parameters:
+          - in: path
+            name: pdf_id
+            description: The provided unique ID of the document to retrieve the text content from
+            required: true
+            type: string
+        responses:
+          200:
+            description: Returns the text content of the document
+            content:
+                type: string
+
+  components:
+    responses:
+      429:
+        description: The limit of requests by a unique IP is exceeded
+    securitySchemes: {}
+    schemas:
+      PdfId:
+        properties:
+          _id:
+            type: string
+            format: UUID
+      PdfMetadata:
+        properties:
+          _id:
+            type: string
+            format: UUID
+          name:
+            type: string
+            format: string
+          link:
+            type: string
+            format: string
+          data:
+            type: string
+            format: array
+          task_state:
+            type: string
+            format: string
+          created_at:
+            type: string
+            format: date-time
+    parameters: {}
+

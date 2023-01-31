@@ -2,14 +2,15 @@
 """
 Created on January 20th, 2023
 @title: Balth App
-@version: 2.0.1
+@version: 2.1
+# Add Updated_at field in infos_db/metadata
 @author: Balthazar Méhus
 @society: CentraleSupélec
 @abstract: Python PDF extraction and storage - Database model.
 """
+from sqlalchemy import Column, DateTime, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, Column, String, DateTime
 from sqlalchemy.sql import func
 
 # Config SQLAlchemy to store in a database
@@ -32,7 +33,6 @@ class PdfData(Base):
     task_id = Column(String(255), default=default_value, nullable=False)
     task_state = Column(String(255), default='PENDING', nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 Base.metadata.create_all(engine)
